@@ -608,13 +608,7 @@ void MainPanel::layoutPages()
 
 void MainPanel::paint (juce::Graphics& g)
 {
-    g.fillAll (Colours::background);
-
-    auto header = juce::Rectangle<int> (0, 0, baseWidth, 46);
-    g.setGradientFill (juce::ColourGradient (Colours::panelLight, 0.0f, 0.0f, Colours::panel, 0.0f, 46.0f, false));
-    g.fillRect (header);
-    g.setColour (Colours::edge);
-    g.drawHorizontalLine (46, 0.0f, (float) baseWidth);
+    Hardware::drawChassis (g, { 0, 0, baseWidth, baseHeight }, 46);
 
     // Logo: a clipped waveform
     {
@@ -627,7 +621,7 @@ void MainPanel::paint (juce::Graphics& g)
         wave.lineTo (x0 + 19.0f, y0 + 8.0f);
         wave.lineTo (x0 + 22.0f, y0);
         wave.lineTo (x0 + 26.0f, y0);
-        g.setColour (Colours::threshold);
+        g.setColour (Colours::signature);
         g.strokePath (wave, juce::PathStrokeType (2.4f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
         g.setColour (Colours::danger);
         g.fillEllipse (x0 + 24.0f, y0 - 10.0f, 6.0f, 6.0f);
@@ -635,7 +629,7 @@ void MainPanel::paint (juce::Graphics& g)
         g.setFont (uiFont (21.0f, true));
         g.setColour (Colours::text);
         g.drawText ("LA", 48, 8, 30, 30, juce::Justification::centredLeft);
-        g.setColour (Colours::threshold);
+        g.setColour (Colours::signature);
         g.drawText ("AMPSUITE", 76, 8, 120, 30, juce::Justification::centredLeft);
         g.setColour (Colours::textDim);
         g.setFont (uiFont (10.5f));
