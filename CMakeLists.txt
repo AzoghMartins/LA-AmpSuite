@@ -1,14 +1,26 @@
 cmake_minimum_required(VERSION 3.22)
 
+# macOS: one universal binary for Apple silicon and Intel Macs. Windows: link the C/C++ runtime
+# statically so the plugin does not need the Visual C++ redistributable. (Both must be set before project().)
+set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "macOS architectures")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum macOS version")
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 project(LAAmpSuite VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+if(MSVC)
+    # M_PI and friends; sources are UTF-8
+    add_compile_definitions(_USE_MATH_DEFINES)
+    add_compile_options(/utf-8)
+endif()
+
 option(LAAS_BUILD_TESTS "Build the DSP and plugin tests" ON)
 option(LAAS_ENGINE_ONLY "Only build the DSP engine and engine tests (no JUCE)" OFF)
-option(LAAS_COPY_AFTER_BUILD "Install plugins into ~/.vst3 and ~/.lv2 after building" OFF)
+option(LAAS_COPY_AFTER_BUILD "Install the plugins into the user/system plugin folders after building" OFF)
 set(LAAS_JUCE_DIR "" CACHE PATH "Path to a local JUCE checkout (fetched from GitHub when empty)")
 
 # ---------------------------------------------------------------------------------------------
@@ -48,6 +60,15 @@ set(LAAS_PLUGIN_SOURCES
     Source/gui/Displays.cpp
     Source/gui/PluginEditor.cpp)
 
+# VST3 everywhere; LV2 + Standalone on Linux; AU on macOS
+if(WIN32)
+    set(LAAS_FORMATS VST3)
+elseif(APPLE)
+    set(LAAS_FORMATS VST3 AU)
+else()
+    set(LAAS_FORMATS VST3 LV2 Standalone)
+endif()
+
 # ---------------------------------------------------------------------------------------------
 # Plugin
 juce_add_plugin(LAAmpSuite
@@ -56,7 +77,7 @@ juce_add_plugin(LAAmpSuite
     BUNDLE_ID "com.la-audio.laampsuite"
     PLUGIN_MANUFACTURER_CODE LaAu
     PLUGIN_CODE LaAs
-    FORMATS VST3 LV2 Standalone
+    FORMATS ${LAAS_FORMATS}
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT FALSE
     NEEDS_MIDI_OUTPUT FALSE

@@ -1,8 +1,16 @@
 # LA-AmpSuite
 
-A guitar and bass amp suite for Linux (VST3 / LV2 / Standalone), aimed at rock, punk and metal:
+A guitar and bass amp suite for Linux, Windows and macOS, aimed at rock, punk and metal:
 pedals, amp heads, effects loop, cabinets with mics or your own impulse responses, and post effects.
 It uses the same look as LA-Trigger and LA-VocalChain.
+
+| Platform | Formats |
+|---|---|
+| Windows 10/11 (x64) | VST3 |
+| macOS 10.13+ (Apple silicon and Intel) | VST3, AU |
+| Linux (x86_64) | VST3, LV2, Standalone |
+
+Ready-to-install builds for all three are on the [Releases](https://github.com/AzoghMartins/LA-AmpSuite/releases) page.
 
 ![LA-AmpSuite](docs/screenshot.png)
 
@@ -114,7 +122,9 @@ presets (including the pedal order and IR files) in `~/.config/LA Audio/LA-AmpSu
 Tip: aim for DI peaks around −12 to −6 dBFS (watch the IN meter) and adjust the input gain to match
 your pickups.
 
-## Building (Linux)
+## Building
+
+### Linux
 
 ```bash
 sudo apt install build-essential cmake ninja-build libasound2-dev libx11-dev libxrandr-dev \
@@ -135,7 +145,44 @@ Options:
 - `-DLAAS_COPY_AFTER_BUILD=ON` installs the plugins automatically.
 - `-DLAAS_ENGINE_ONLY=ON` builds only the DSP engine and its tests (no JUCE needed).
 
-GitHub Actions builds every push and uploads a ready-to-install tarball as an artifact.
+### Windows
+
+Needs Visual Studio 2022 (the "Desktop development with C++" workload) and CMake 3.22 or newer.
+
+```powershell
+cmake -B build -G "Visual Studio 17 2022" -A x64          # downloads JUCE 8 automatically
+cmake --build build --config Release --parallel
+ctest --test-dir build -C Release --output-on-failure       # optional: run the tests
+```
+
+Install by copying `build\LAAmpSuite_artefacts\Release\VST3\LA-AmpSuite.vst3` into `C:\Program Files\Common Files\VST3`.
+
+### macOS
+
+Needs Xcode (or the Command Line Tools) and CMake 3.22 or newer. The build is a universal binary
+(Apple silicon and Intel) and runs on macOS 10.13 or newer.
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release                   # downloads JUCE 8 automatically
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure                  # optional: run the tests
+
+# install
+cp -R build/LAAmpSuite_artefacts/Release/VST3/LA-AmpSuite.vst3 ~/Library/Audio/Plug-Ins/VST3/
+cp -R build/LAAmpSuite_artefacts/Release/AU/LA-AmpSuite.component ~/Library/Audio/Plug-Ins/Components/
+```
+
+### Downloads
+
+GitHub Actions builds every push on Linux, Windows and macOS and uploads ready-to-install archives as
+artifacts. Tagged releases carry all three:
+
+- `LA-AmpSuite-linux-x86_64.tar.gz`: VST3, LV2 and Standalone. Copy them into `~/.vst3` and `~/.lv2`.
+- `LA-AmpSuite-windows-x64.zip`: VST3. Extract it into `C:\Program Files\Common Files\VST3`.
+- `LA-AmpSuite-macos-universal.zip`: VST3 and AU. Copy them into `~/Library/Audio/Plug-Ins/VST3` and
+  `~/Library/Audio/Plug-Ins/Components`. The plugins are not notarized, so after downloading, clear the
+  quarantine flag once before starting your DAW:
+  `xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/LA-AmpSuite.vst3 ~/Library/Audio/Plug-Ins/Components/LA-AmpSuite.component`
 
 ## Project layout
 
