@@ -18,6 +18,7 @@ juce::Colour pedalColour (PedalId p);
 class SpeakerView : public juce::Component, public juce::SettableTooltipClient
 {
 public:
+    void paintOverChildren (juce::Graphics& g) override { Hardware::drawGlass (g, getLocalBounds().toFloat()); }
     explicit SpeakerView (AmpSuiteProcessor&);
     void paint (juce::Graphics&) override;
     void mouseDown (const juce::MouseEvent&) override;
@@ -52,6 +53,7 @@ private:
 class ResponseDisplay : public juce::Component, public juce::SettableTooltipClient
 {
 public:
+    void paintOverChildren (juce::Graphics& g) override { Hardware::drawGlass (g, getLocalBounds().toFloat()); }
     explicit ResponseDisplay (AmpSuiteProcessor&);
 
     void pullSpectrum();
@@ -96,6 +98,7 @@ private:
 class TunerPanel : public juce::Component
 {
 public:
+    void paintOverChildren (juce::Graphics& g) override { Hardware::drawGlass (g, getLocalBounds().toFloat()); }
     explicit TunerPanel (AmpSuiteProcessor& p);
     void tick();
     void paint (juce::Graphics&) override;

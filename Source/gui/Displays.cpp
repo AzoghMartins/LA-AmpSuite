@@ -23,10 +23,7 @@ void drawLegend (juce::Graphics& g, juce::Rectangle<int> area, std::initializer_
 
 void drawPanelBackground (juce::Graphics& g, juce::Rectangle<float> bounds)
 {
-    g.setColour (Colours::graphBg);
-    g.fillRoundedRectangle (bounds, 6.0f);
-    g.setColour (Colours::edge);
-    g.drawRoundedRectangle (bounds.reduced (0.5f), 6.0f, 1.0f);
+    Hardware::drawScreen (g, bounds);
 }
 
 float param01 (juce::AudioProcessorValueTreeState& s, const char* id) { return s.getRawParameterValue (id)->load(); }
@@ -177,8 +174,8 @@ void SpeakerView::paint (juce::Graphics& g)
     const bool cabOn = param01 (state, ParamID::cabOn) > 0.5f;
     const int cab = juce::roundToInt (param01 (state, ParamID::cabModel));
 
-    g.setFont (uiFont (11.0f, true));
-    g.setColour (Colours::text);
+    g.setFont (legendFont (11.0f));
+    g.setColour (Colours::signature);
     g.drawText ("CAB / MICS", 10, 3, 120, 18, juce::Justification::centredLeft);
     g.setColour (cabOn ? Colours::accent : Colours::textDim);
     g.drawText (cabOn ? juce::String (cabModelName (cab)).toUpperCase() : juce::String ("CAB OFF (DI)"), 100, 3,
@@ -600,8 +597,8 @@ void ResponseDisplay::paint (juce::Graphics& g)
     }
 
     g.restoreState();
-    g.setFont (uiFont (11.0f, true));
-    g.setColour (Colours::text);
+    g.setFont (legendFont (11.0f));
+    g.setColour (Colours::signature);
     g.drawText ("TONE / SPECTRUM", 10, 3, 140, 18, juce::Justification::centredLeft);
     drawLegend (g, { 0, 3, getWidth() - 10, 18 },
                 { { "AMP", Colours::detection }, { "CAB", Colours::accent }, { "POST EQ", Colours::threshold }, { "OUT", Colours::input } });
@@ -645,12 +642,13 @@ void TunerPanel::tick()
 
 void TunerPanel::paint (juce::Graphics& g)
 {
-    auto r = getLocalBounds().reduced (10, 8);
+    Hardware::drawScreen (g, getLocalBounds().toFloat());
+    auto r = getLocalBounds().reduced (12, 8);
     const bool muted = processor.isTunerMuted();
 
     auto top = r.removeFromTop (16);
-    g.setFont (uiFont (11.0f, true));
-    g.setColour (Colours::textDim);
+    g.setFont (legendFont (11.0f));
+    g.setColour (Colours::signature);
     g.drawText ("TUNER", top, juce::Justification::centredLeft);
     if (muted)
     {
@@ -860,25 +858,27 @@ void ChainStrip::paint (juce::Graphics& g)
         const bool on = tileEnabled (t);
         const bool hov = (int) i == hoverTile;
 
-        g.setColour ((int) i == dragTile ? Colours::panelLight.brighter (0.15f) : (hov ? Colours::panelLight.brighter (0.06f) : Colours::panelLight));
-        g.fillRoundedRectangle (b.reduced (0.5f, 1.5f), 5.0f);
-        g.setColour (on ? t.colour.withAlpha (0.8f) : Colours::edge);
-        g.drawRoundedRectangle (b.reduced (0.5f, 1.5f), 5.0f, on ? 1.2f : 1.0f);
+        Hardware::drawPlate (g, b.reduced (0.5f, 1.5f), 4.0f, false);
+        if (hov || (int) i == dragTile)
+        {
+            g.setColour (juce::Colours::white.withAlpha ((int) i == dragTile ? 0.08f : 0.04f));
+            g.fillRoundedRectangle (b.reduced (0.5f, 1.5f), 4.0f);
+        }
         if (on)
         {
-            g.setColour (t.colour);
-            g.fillRoundedRectangle (b.getX() + 6.0f, b.getBottom() - 5.0f, b.getWidth() - 12.0f, 2.0f, 1.0f);
+            g.setColour (t.colour.withAlpha (0.85f));
+            g.fillRect (b.getX() + 8.0f, b.getBottom() - 6.0f, b.getWidth() - 16.0f, 2.0f);
+        }
+        {
+            // Read-out window
+            const auto lcd = b.withTrimmedTop (23.0f).withTrimmedBottom (9.0f).reduced (8.0f, 0.0f);
+            if (lcd.getHeight() > 8.0f)
+                Hardware::drawRecess (g, lcd, 2.0f);
         }
         if (t.enableId.isNotEmpty())
-        {
-            auto pr = powerRect (t).withX (b.getX() + 7.0f);
-            g.setColour (on ? t.colour : Colours::graphBg);
-            g.fillEllipse (pr);
-            g.setColour (on ? t.colour.brighter (0.3f) : Colours::textDim);
-            g.drawEllipse (pr, 1.0f);
-        }
-        g.setFont (uiFont (11.0f, true));
-        g.setColour (on ? Colours::text : Colours::textDim);
+            Hardware::drawLed (g, powerRect (t).withX (b.getX() + 7.0f).reduced (1.0f), t.colour, on);
+        g.setFont (legendFont (11.0f));
+        g.setColour (on ? Colours::signature : Colours::textDim);
         g.drawText (t.name, b.withTrimmedLeft (t.enableId.isNotEmpty() ? 20.0f : 6.0f).withHeight (24.0f).translated (0.0f, 1.0f),
                     t.enableId.isNotEmpty() ? juce::Justification::centredLeft : juce::Justification::centred);
         g.setFont (uiFont (9.5f));
