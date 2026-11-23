@@ -1,8 +1,16 @@
 # LA-AmpSuite
 
-A guitar and bass amp suite for Linux, Windows and macOS (VST3, plus LV2 / Standalone on Linux and AU on macOS), aimed at rock, punk and metal:
+A guitar and bass amp suite for Linux, Windows and macOS, aimed at rock, punk and metal:
 pedals, amp heads, effects loop, cabinets with mics or your own impulse responses, and post effects.
 It uses the same look as LA-Trigger and LA-VocalChain.
+
+| Platform | Formats |
+|---|---|
+| Windows 10/11 (x64) | VST3 |
+| macOS 10.13+ (Apple silicon and Intel) | VST3, AU |
+| Linux (x86_64) | VST3, LV2, Standalone |
+
+Ready-to-install builds for all three are on the [Releases](https://github.com/AzoghMartins/LA-AmpSuite/releases) page.
 
 ![LA-AmpSuite](docs/screenshot.png)
 
