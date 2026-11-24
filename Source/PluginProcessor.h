@@ -117,7 +117,8 @@ private:
 
     /** Builds IRs whose settings changed; install = true puts them in directly (audio stopped). */
     void updateImpulses (bool install);
-    void resetToDefaults();
+    /** Sets every parameter in one pass: listed ones to their value, the rest to their default. */
+    void applyParameterValues (const std::vector<std::pair<const char*, float>>& values);
     void restoreExtraState (const juce::ValueTree& tree);
     void storeExtraState (juce::ValueTree& tree) const;
 

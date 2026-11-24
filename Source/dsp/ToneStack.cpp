@@ -14,13 +14,16 @@ void designBiquads (std::array<Biquad, 5>& bq, ToneStackType type, const ToneSta
     auto knobDb = [] (float v, float range) { return (double) ((clampf (v, 0.0f, 1.0f) - 0.5f) * 2.0f * range); };
     if (type == ToneStackType::svt)
     {
-        bq[0].setLowShelf (sr, 60.0, knobDb (s.bass, 15.0f), 0.8);
-        bq[1].setPeak (sr, ToneStack::midFrequencyHz (s.midFreq), 0.9, s.mid >= 0.5f ? knobDb (s.mid, 12.0f) : knobDb (s.mid, 15.0f));
-        bq[2].setHighShelf (sr, 4500.0, knobDb (s.treble, 15.0f), 0.8);
-        // Ultra Lo: +3 dB at 40 Hz and a deep cut around 500 Hz. Ultra Hi: +9 dB at 8 kHz.
-        if (s.ultraLo) bq[3].setPeak (sr, 500.0, 0.6, -12.0), bq[0].setLowShelf (sr, 60.0, knobDb (s.bass, 15.0f) + 3.0, 0.8);
+        // Ampeg's published SVT-CL figures: bass +/-12 dB @ 40 Hz, mid +10/-20 dB at 220/450/800/1.6k/3k,
+        // treble +15/-20 dB @ 4 kHz, Ultra Lo +2 dB @ 40 Hz and -10 dB @ 500 Hz, Ultra Hi +9 dB @ 8 kHz.
+        auto asym = [] (float v, float boost, float cut) { const float c = clampf (v, 0.0f, 1.0f) - 0.5f; return (double) (c >= 0.0f ? c * 2.0f * boost : c * 2.0f * cut); };
+        const double bassDb = knobDb (s.bass, 12.5f) + (s.ultraLo ? 2.0 : 0.0);
+        bq[0].setLowShelf (sr, 95.0, bassDb, 0.8);
+        bq[1].setPeak (sr, ToneStack::midFrequencyHz (s.midFreq), 0.9, asym (s.mid, 10.0f, 20.0f));
+        bq[2].setHighShelf (sr, 1500.0, asym (s.treble, 16.0f, 22.0f), 0.8);
+        if (s.ultraLo) bq[3].setPeak (sr, 500.0, 0.6, -10.0);
         else bq[3].setBypass();
-        if (s.ultraHi) bq[4].setHighShelf (sr, 8000.0, 9.0, 0.7);
+        if (s.ultraHi) bq[4].setHighShelf (sr, 3500.0, 9.5, 0.7);
         else bq[4].setBypass();
     }
     else

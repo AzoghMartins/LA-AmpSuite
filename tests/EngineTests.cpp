@@ -209,10 +209,22 @@ static void testToneStack()
     const double at220 = ToneStack::magnitudeDb (ToneStackType::svt, {}, svt, 220.0, sr);
     svt.midFreq = 4;
     const double at3k = ToneStack::magnitudeDb (ToneStackType::svt, {}, svt, 3000.0, sr);
-    check (at220 > 10.0 && at3k > 10.0, "SVT mid boost follows the 5-position frequency selector");
+    check (at220 > 9.5 && at3k > 9.5, "SVT mid boost follows the 5-position frequency selector");
     ToneStackSettings ul;
     ul.ultraLo = true;
     check (ToneStack::magnitudeDb (ToneStackType::svt, {}, ul, 500.0, sr) < -8.0, "SVT ultra lo scoops 500 Hz");
+
+    // Ampeg's published SVT-CL tone control ranges
+    auto svtDb = [&] (ToneStackSettings ts, double f) { return ToneStack::magnitudeDb (ToneStackType::svt, {}, ts, f, sr); };
+    auto near = [] (double v, double target, double tol) { return std::abs (v - target) <= tol; };
+    ToneStackSettings flat, bMax = flat, bMin = flat, tMax = flat, tMin = flat, mMax = flat, mMin = flat, uh = flat;
+    bMax.bass = 1.0f; bMin.bass = 0.0f; tMax.treble = 1.0f; tMin.treble = 0.0f; mMax.mid = 1.0f; mMin.mid = 0.0f; uh.ultraHi = true;
+    mMax.midFreq = mMin.midFreq = 2;
+    check (near (svtDb (bMax, 40.0), 12.0, 1.5) && near (svtDb (bMin, 40.0), -12.0, 1.5), "SVT bass +/-12 dB @ 40 Hz (" + fmt (svtDb (bMax, 40.0)) + " / " + fmt (svtDb (bMin, 40.0)) + ")");
+    check (near (svtDb (tMax, 4000.0), 15.0, 1.5) && near (svtDb (tMin, 4000.0), -20.0, 1.5), "SVT treble +15/-20 dB @ 4 kHz (" + fmt (svtDb (tMax, 4000.0)) + " / " + fmt (svtDb (tMin, 4000.0)) + ")");
+    check (near (svtDb (mMax, 800.0), 10.0, 1.5) && near (svtDb (mMin, 800.0), -20.0, 1.5), "SVT mid +10/-20 dB (" + fmt (svtDb (mMax, 800.0)) + " / " + fmt (svtDb (mMin, 800.0)) + ")");
+    check (near (svtDb (ul, 40.0), 2.0, 1.0) && near (svtDb (ul, 500.0), -10.0, 1.5), "SVT ultra lo +2 dB @ 40 Hz, -10 dB @ 500 Hz (" + fmt (svtDb (ul, 40.0)) + " / " + fmt (svtDb (ul, 500.0)) + ")");
+    check (near (svtDb (uh, 8000.0), 9.0, 1.5), "SVT ultra hi +9 dB @ 8 kHz (" + fmt (svtDb (uh, 8000.0)) + ")");
 }
 
 static void testAmps()

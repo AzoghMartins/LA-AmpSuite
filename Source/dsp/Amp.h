@@ -16,6 +16,8 @@ struct StageSpec
     float cathodeDb = 0.0f;   // low shelf gain below cathodeHz
     float millerHz = 12000.0f; // Miller capacitance / treble bleed low-pass
     float bias = 0.0f;        // operating point: negative = colder (more asymmetric clipping)
+    float trebleHz = 0.0f;    // treble-peaking network in front of the stage (e.g. 470k mixer resistor
+    float trebleDb = 0.0f;    //   bypassed by a small cap): high shelf at the stage input (0 = none)
 };
 
 enum class AmpModel
@@ -57,6 +59,12 @@ struct AmpModelSpec
     float sag;             // supply sag (tube rectifier = more)
     float xfmrLowHz, xfmrHighHz;
     float outputTrimDb;    // level calibration so every model sits at a similar loudness
+
+    // Power tube character: how abruptly the output stage goes from clean to clipped. EL34 pentodes
+    // break up early and gradually (the Marshall crunch), 6L6 beam tetrodes stay cleaner and then
+    // clip harder, 6550s have the most headroom and the hardest knee. 2 = the generic soft curve.
+    float powerKnee = 2.0f;
+    const char* powerTubeName = "";
 };
 
 const AmpModelSpec& ampModelSpec (AmpModel m) noexcept;
@@ -87,7 +95,7 @@ public:
 
 private:
     StageSpec spec;
-    OnePole coupling, cathode, miller;
+    OnePole coupling, cathode, miller, treble;
     float gridEnv = 0.0f, gridAtt = 0.0f, gridRel = 0.0f, restOut = 0.0f;
 };
 
