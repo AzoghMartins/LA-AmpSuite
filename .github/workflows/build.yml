@@ -34,7 +34,8 @@ jobs:
       - name: Package
         run: |
           cd build/LAAmpSuite_artefacts/Release
-          tar czf ../../../LA-AmpSuite-linux-x86_64.tar.gz VST3/LA-AmpSuite.vst3 LV2/LA-AmpSuite.lv2 Standalone/LA-AmpSuite
+          cp ../../../LICENSE LICENSE-LA-AmpSuite.txt
+          tar czf ../../../LA-AmpSuite-linux-x86_64.tar.gz VST3/LA-AmpSuite.vst3 LV2/LA-AmpSuite.lv2 Standalone/LA-AmpSuite LICENSE-LA-AmpSuite.txt
 
       - uses: actions/upload-artifact@v4
         with:
@@ -57,7 +58,9 @@ jobs:
 
       - name: Package
         shell: pwsh
-        run: Compress-Archive -Path build/LAAmpSuite_artefacts/Release/VST3/LA-AmpSuite.vst3 -DestinationPath LA-AmpSuite-windows-x64.zip
+        run: |
+          Copy-Item LICENSE LICENSE-LA-AmpSuite.txt
+          Compress-Archive -Path build/LAAmpSuite_artefacts/Release/VST3/LA-AmpSuite.vst3, LICENSE-LA-AmpSuite.txt -DestinationPath LA-AmpSuite-windows-x64.zip
 
       - uses: actions/upload-artifact@v4
         with:
@@ -93,7 +96,8 @@ jobs:
       - name: Package
         run: |
           cd build/LAAmpSuite_artefacts/Release
-          zip -r -y ../../../LA-AmpSuite-macos-universal.zip VST3/LA-AmpSuite.vst3 AU/LA-AmpSuite.component
+          cp ../../../LICENSE LICENSE-LA-AmpSuite.txt
+          zip -r -y ../../../LA-AmpSuite-macos-universal.zip VST3/LA-AmpSuite.vst3 AU/LA-AmpSuite.component LICENSE-LA-AmpSuite.txt
 
       - uses: actions/upload-artifact@v4
         with:

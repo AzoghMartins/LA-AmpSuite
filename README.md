@@ -225,6 +225,10 @@ Marshall, Peavey, 5150, 6505, Mesa/Boogie, Rectifier, Mark IIC+, Ampeg, SVT, B-1
 Sennheiser, Royer and Neumann are trademarks of their owners. They are named only to describe the sounds
 these models are voiced after. LA-AmpSuite is not affiliated with or endorsed by any of them.
 
-LA-AmpSuite is built on [JUCE 8](https://juce.com), which is dual-licensed under AGPLv3 or a
-commercial license. Distributing builds requires either releasing this code under AGPLv3 or
-holding a JUCE commercial license.
+LA-AmpSuite is free software: you can redistribute it and/or modify it under the terms of the
+[GNU Affero General Public License, version 3](LICENSE) (AGPL-3.0). It comes with absolutely no warranty.
+This applies to every release, including v0.1 and v0.2, which were published before the LICENSE file was added.
+
+Copyright (C) 2026 AzoghMartins (Lantern Assembly).
+
+LA-AmpSuite is built on [JUCE 8](https://juce.com), used here under the AGPLv3.
