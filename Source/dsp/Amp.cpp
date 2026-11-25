@@ -4,8 +4,11 @@ namespace laas
 {
 namespace
 {
-// Shorthand for stage tables: { gain, couplingHz, cathodeHz, cathodeDb, millerHz, bias }
-constexpr StageSpec st (float g, float hp, float cHz, float cDb, float lp, float bias) { return { g, hp, cHz, cDb, lp, bias }; }
+// Shorthand for stage tables: { gain, couplingHz, cathodeHz, cathodeDb, millerHz, bias [, trebleHz, trebleDb] }
+constexpr StageSpec st (float g, float hp, float cHz, float cDb, float lp, float bias, float tHz = 0.0f, float tDb = 0.0f)
+{
+    return { g, hp, cHz, cDb, lp, bias, tHz, tDb };
+}
 
 TmbComponents tmb (double r1, double r2, double r3, double r4, double c1, double c2, double c3)
 {
@@ -25,37 +28,43 @@ const std::array<AmpModelSpec, (size_t) AmpModel::numModels>& specs()
           { st (3.0f, 20.0f, 150.0f, -4.0f, 16000.0f, 0.0f), st (6.5f, 25.0f, 110.0f, -3.0f, 9000.0f, -0.1f), {}, {}, {} },
           1, -30.0f, 6.0f, 1400.0f, 9.0f, 1, ToneStackType::tmb,
           tmb (250e3, 1e6, 25e3, 33e3, 500e-12, 22e-9, 22e-9), 0.0f, 0.6f,
-          2.2f, 0.08f, 4000.0f, 7.0f, 100.0f, 4.0f, 0.35f, 45.0f, 9000.0f, 2.6f },
+          2.2f, 0.08f, 4000.0f, 7.0f, 100.0f, 4.0f, 0.35f, 45.0f, 9000.0f, 2.6f, 1.6f, "4x EL34" },
 
         // ---- JCM800 2203: V1a, gain pot with bright cap, V1b, cold-biased V2a clipper, CF, stack.
         { "Brit 800", "800", "Marshall JCM800 2203",
           "The punk and hard rock sound: tight, mid-forward, raspy top end. Great with a boost in front.",
           false, 3,
-          { st (3.0f, 20.0f, 90.0f, -6.0f, 16000.0f, 0.0f), st (8.0f, 30.0f, 0.0f, 0.0f, 12000.0f, 0.0f),
-            st (5.0f, 35.0f, 0.0f, 0.0f, 7000.0f, -0.55f), {}, {} },
+          // V1a 2.7k / 0.68uF and V1b 820R / 0.68uF: both only partly bypassed, so the bass is trimmed
+          // before it reaches the clipper (the tight 800 low end). The 470k mixer resistor into the
+          // cold-biased V2a (10k unbypassed cathode) is bridged by 470pF: treble is pushed into the clipper.
+          { st (3.0f, 20.0f, 90.0f, -6.0f, 16000.0f, 0.0f), st (8.0f, 30.0f, 300.0f, -6.0f, 12000.0f, 0.0f),
+            st (5.0f, 35.0f, 0.0f, 0.0f, 7000.0f, -0.55f, 720.0f, 5.0f), {}, {} },
           1, -36.0f, 4.0f, 1200.0f, 6.0f, 2, ToneStackType::tmb,
           tmb (220e3, 1e6, 22e3, 33e3, 470e-12, 22e-9, 22e-9), 0.0f, 0.5f,
-          1.4f, 0.06f, 4500.0f, 8.0f, 100.0f, 5.0f, 0.25f, 45.0f, 9500.0f, -1.1f },
+          1.4f, 0.06f, 4500.0f, 8.0f, 100.0f, 5.0f, 0.25f, 45.0f, 9500.0f, 1.6f, 1.7f, "4x EL34" },
 
         // ---- 5150 / 6505 lead: cascaded stages with small coupling caps (tight), post stack.
         { "American 51", "51", "Peavey 5150 / 6505 (lead channel)",
           "Thrash and metal rhythm: aggressive, tight low end, cutting upper mids. Responds hard to presence/resonance.",
           false, 4,
           { st (2.5f, 30.0f, 200.0f, -4.0f, 13000.0f, 0.0f), st (9.0f, 90.0f, 0.0f, 0.0f, 9000.0f, 0.0f),
-            st (8.0f, 150.0f, 0.0f, 0.0f, 6500.0f, -0.2f), st (6.0f, 120.0f, 0.0f, 0.0f, 6000.0f, -0.5f), {} },
+            // last stage: cold clipper (large unbypassed cathode resistor, SLO-style)
+            st (8.0f, 150.0f, 0.0f, 0.0f, 6500.0f, -0.2f), st (6.0f, 120.0f, 0.0f, 0.0f, 6000.0f, -0.62f), {} },
           1, -46.0f, 0.0f, 2500.0f, 4.0f, 3, ToneStackType::tmb,
           tmb (250e3, 1e6, 25e3, 47e3, 250e-12, 47e-9, 22e-9), 0.0f, 0.4f,
-          1.0f, 0.05f, 5000.0f, 9.0f, 90.0f, 8.0f, 0.15f, 40.0f, 10000.0f, -0.8f },
+          1.0f, 0.05f, 5000.0f, 9.0f, 90.0f, 8.0f, 0.15f, 40.0f, 10000.0f, -0.8f, 2.6f, "4x 6L6GC" },
 
         // ---- Dual Rectifier modern: high gain, looser lows, fizzy top, tube rectifier sag.
         { "Recto Modern", "RECTO", "Mesa/Boogie Dual Rectifier (modern red channel)",
           "Modern metal: huge saturated low end, scooped mids, sizzling top. Try the mids around 3-4.",
           false, 4,
           { st (2.5f, 25.0f, 120.0f, -3.0f, 14000.0f, 0.0f), st (9.0f, 50.0f, 0.0f, 0.0f, 10000.0f, 0.0f),
-            st (9.0f, 70.0f, 0.0f, 0.0f, 8000.0f, -0.3f), st (6.0f, 60.0f, 0.0f, 0.0f, 7000.0f, -0.55f), {} },
+            // 39k unbypassed cold clipper with a 1nF plate cap (HF suppression)
+            st (9.0f, 70.0f, 0.0f, 0.0f, 8000.0f, -0.3f), st (6.0f, 60.0f, 0.0f, 0.0f, 6000.0f, -0.62f), {} },
           1, -46.0f, 0.0f, 2000.0f, 5.0f, 3, ToneStackType::tmb,
-          tmb (250e3, 1e6, 25e3, 47e3, 500e-12, 22e-9, 22e-9), 0.0f, 0.45f,
-          1.2f, 0.07f, 4000.0f, 9.0f, 80.0f, 9.0f, 0.45f, 38.0f, 10500.0f, -4.7f },
+          // Modern mode adds a cap that takes the treble cap from 500pF to 680pF (more upper mids)
+          tmb (250e3, 1e6, 25e3, 47e3, 680e-12, 22e-9, 22e-9), 0.0f, 0.45f,
+          1.2f, 0.07f, 2400.0f, 9.0f, 80.0f, 9.0f, 0.45f, 38.0f, 10500.0f, -4.7f, 2.5f, "4x 6L6GC" },
 
         // ---- Mark IIC+ lead: tone stack before the lead cascade, so treble/bass shape the distortion.
         { "Mark C+ Lead", "MARK", "Mesa/Boogie Mark IIC+ (lead channel)",
@@ -65,7 +74,7 @@ const std::array<AmpModelSpec, (size_t) AmpModel::numModels>& specs()
             st (8.0f, 150.0f, 0.0f, 0.0f, 7000.0f, -0.3f), st (5.0f, 100.0f, 0.0f, 0.0f, 6500.0f, -0.5f), {} },
           1, -42.0f, 4.0f, 2200.0f, 4.0f, 0, ToneStackType::tmb,
           tmb (250e3, 250e3, 10e3, 100e3, 750e-12, 100e-9, 47e-9), 0.0f, 0.35f,
-          1.1f, 0.05f, 4000.0f, 7.0f, 100.0f, 5.0f, 0.2f, 45.0f, 10000.0f, 0.9f },
+          1.1f, 0.05f, 4000.0f, 7.0f, 100.0f, 5.0f, 0.2f, 45.0f, 10000.0f, 0.9f, 2.4f, "4x 6L6 (Simul-Class)" },
 
         // ---- SVT Classic: active stack with 5-position mid and ultra lo/hi, huge 6550 headroom.
         { "SVT Classic", "SVT", "Ampeg SVT Classic (bass)",
@@ -73,7 +82,7 @@ const std::array<AmpModelSpec, (size_t) AmpModel::numModels>& specs()
           true, 2,
           { st (2.0f, 10.0f, 0.0f, 0.0f, 20000.0f, 0.0f), st (2.5f, 12.0f, 0.0f, 0.0f, 15000.0f, -0.1f), {}, {}, {} },
           1, -24.0f, 14.0f, 3000.0f, 3.0f, 0, ToneStackType::svt, {}, 0.0f, 0.2f,
-          0.7f, 0.04f, 3000.0f, 3.0f, 60.0f, 4.0f, 0.1f, 25.0f, 10000.0f, 5.3f },
+          0.7f, 0.04f, 3000.0f, 3.0f, 60.0f, 4.0f, 0.1f, 25.0f, 15000.0f, 5.3f, 3.2f, "6x 6550" },
 
         // ---- B-15: low gain, warm and round, tube rectifier.
         { "Flip-Top B15", "B15", "Ampeg B-15 Portaflex (bass)",
@@ -81,7 +90,7 @@ const std::array<AmpModelSpec, (size_t) AmpModel::numModels>& specs()
           true, 2,
           { st (2.0f, 15.0f, 0.0f, 0.0f, 9000.0f, 0.0f), st (2.5f, 15.0f, 0.0f, 0.0f, 6000.0f, -0.15f), {}, {}, {} },
           1, -20.0f, 12.0f, 2000.0f, 2.0f, 1, ToneStackType::vintage, {}, 0.0f, 0.3f,
-          1.0f, 0.06f, 2500.0f, 3.0f, 80.0f, 3.0f, 0.5f, 35.0f, 7000.0f, 5.1f },
+          1.0f, 0.06f, 2500.0f, 3.0f, 80.0f, 3.0f, 0.5f, 35.0f, 7000.0f, 5.1f, 2.0f, "2x 6L6, tube rectifier" },
 
         // ---- Bass 400+: tube bass head, aggressive mids, more gain on tap.
         { "Bass 400", "B400", "Mesa/Boogie Bass 400+ (bass)",
@@ -91,7 +100,7 @@ const std::array<AmpModelSpec, (size_t) AmpModel::numModels>& specs()
             st (3.0f, 25.0f, 0.0f, 0.0f, 8000.0f, -0.4f), {}, {} },
           1, -30.0f, 8.0f, 2500.0f, 3.0f, 2, ToneStackType::tmb,
           tmb (250e3, 1e6, 25e3, 56e3, 500e-12, 100e-9, 47e-9), 0.0f, 0.3f,
-          0.9f, 0.05f, 3500.0f, 4.0f, 70.0f, 5.0f, 0.2f, 25.0f, 10000.0f, 1.4f },
+          0.9f, 0.05f, 3500.0f, 4.0f, 70.0f, 5.0f, 0.2f, 25.0f, 10000.0f, 1.4f, 2.4f, "12x 6L6" },
     } };
     return s;
 }
@@ -102,12 +111,15 @@ inline float triode (float u) noexcept
     return u >= 0.0f ? u / std::sqrt (1.0f + u * u) : u / (1.0f - u * (1.0f / 1.6f));
 }
 
-/** Push-pull power stage curve with a slight mismatch between the halves. */
-inline float powerTubes (float v, float asym) noexcept
+/** Push-pull power stage curve with a slight mismatch between the halves. knee sets how abruptly it
+    saturates: w / (1 + |w|^knee)^(1/knee), 2 = the classic soft curve, higher = cleaner then harder. */
+inline float powerTubes (float v, float asym, float knee) noexcept
 {
     const float k = v >= 0.0f ? 1.0f : 1.0f / (1.0f - asym);
     const float w = v * k;
-    return w / (k * std::sqrt (1.0f + w * w));
+    const float a = std::abs (w);
+    const float d = knee == 2.0f ? std::sqrt (1.0f + a * a) : std::pow (1.0f + std::pow (a, knee), 1.0f / knee);
+    return w / (k * d);
 }
 } // namespace
 
@@ -129,6 +141,10 @@ void TriodeStage::prepare (double osRate, const StageSpec& s)
     else
         cathode.setBypass();
     miller.setLowPass (osRate, s.millerHz);
+    if (s.trebleHz > 0.0f)
+        treble.setHighShelf (osRate, s.trebleHz, s.trebleDb);
+    else
+        treble.setBypass();
     gridAtt = msCoeff (osRate, 0.4f);
     gridRel = msCoeff (osRate, 40.0f);
     restOut = triode (s.bias);
@@ -140,12 +156,13 @@ void TriodeStage::reset() noexcept
     coupling.reset();
     cathode.reset();
     miller.reset();
+    treble.reset();
     gridEnv = 0.0f;
 }
 
 inline float TriodeStage::process (float x) noexcept
 {
-    const float v = cathode.process (coupling.process (x));
+    const float v = cathode.process (coupling.process (treble.process (x)));
     // Grid current charges the coupling cap and shifts the bias (blocking): dynamic, "spongy" clipping
     const float u = spec.gain * v + spec.bias - 0.35f * gridEnv;
     const float g = u > 0.0f ? u : 0.0f;
@@ -261,6 +278,7 @@ void AmpModule::process (float* x, int n) noexcept
     const int stackAfter = spec->stackAfter;
     const float cf = spec->followerDrive;
     const float asym = spec->powerAsym;
+    const float knee = spec->powerKnee;
 
     float peak = 0.0f;
     for (int i = 0; i < n; ++i)
@@ -289,7 +307,7 @@ void AmpModule::process (float* x, int n) noexcept
         // Power amp: depth/presence (negative feedback), push-pull curve, supply sag
         v = presence.process (depth.process (v)) * masterSm.next (masterTarget);
         const float supply = 1.0f - sagAmount * clampf (sagEnv.env, 0.0f, 1.0f) * 0.45f;
-        v = supply * powerTubes (v / supply, asym);
+        v = supply * powerTubes (v / supply, asym, knee);
         sagEnv.process (std::abs (v));
         v = xfmrLp.process (xfmrHp.process (v));
         x[i] = v * levelSm.next (levelTarget) + clean * blendSm.next (blendTarget);

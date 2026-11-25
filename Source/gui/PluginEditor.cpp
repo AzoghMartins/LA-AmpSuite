@@ -115,9 +115,8 @@ MainPanel::MainPanel (AmpSuiteProcessor& p)
     // ---- Header ----------------------------------------------------------------------------
     refreshPresetList();
     presetBox.setTooltip ("Factory and user presets");
-    presetBox.onChange = [this]
+    presetBox.onItemChosen = [this] (int id)
     {
-        const int id = presetBox.getSelectedId();
         if (id > 0 && id < 1000)
             processor.setCurrentProgram (id - 1);
         else if (id >= 1000 && id - 1000 < numUserPresets)
@@ -420,7 +419,7 @@ void MainPanel::updateModelControls()
         c->setAlpha (svt ? 1.0f : 0.35f);
     }
     const auto& spec = ampModelSpec ((AmpModel) m);
-    ampModel->box.setTooltip (juce::String (spec.inspiredBy) + ": " + spec.description);
+    ampModel->box.setTooltip (juce::String (spec.inspiredBy) + " (" + spec.powerTubeName + "): " + spec.description);
 }
 
 //==============================================================================
